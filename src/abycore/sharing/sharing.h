@@ -196,10 +196,6 @@ public:
 	 Getting precomputation phase value
 	*/
 	ePreCompPhase GetPreCompPhaseValue();
-	/**
-	Method to delete the File which stores the precomputation values.
-	*/
-	void PreCompFileDelete();
 
 
 protected:

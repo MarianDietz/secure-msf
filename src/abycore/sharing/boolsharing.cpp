@@ -109,6 +109,7 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 		//Is needed to pad the MTs to a byte, deleting this will make the online phase really messy and (probably) inefficient
 		m_nNumMTs[i] = m_vANDs[i].numgates > 0? m_vANDs[i].numgates + (8 * m_cBoolCircuit->GetMaxDepth()) : m_vANDs[i].numgates;
 		m_nTotalNumMTs += m_vANDs[i].numgates;
+		std::cout << "and's: " << m_vANDs[i].numgates << " mt's\n";
 	}
 
 	//8*circuit_depth are needed since the mtidx is padded to the next byte after each layer
@@ -1620,21 +1621,6 @@ void BoolSharing::Reset() {
 		m_vOP_LUT_SelOpeningBitCtr.clear();
 	}
 
-	/**Checking the role and and deciding upon the file to be deleted if the precomputation values are
-	  completely used up in a Precomputation READ mode.*/
-	filesystem::path precomputation_file;
-	if(m_eRole == SERVER) {
-		precomputation_file = "pre_comp_server.dump";
-	} else {
-		precomputation_file = "pre_comp_client.dump";
-	}
-	if (filesystem::exists(precomputation_file)
-		&& (m_nFilePos >= filesystem::file_size(precomputation_file))
-		&& (GetPreCompPhaseValue() == ePreCompRead)) {
-		filesystem::remove(precomputation_file);
-		m_nFilePos = -1;	// FIXME: m_nFilePos is unsigned ...
-	}
-
 }
 
 /**Pre-computations*/
@@ -1700,6 +1686,7 @@ void BoolSharing::StoreMTsToFile(const char *filename) {
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
 		// uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
+		std::cout << "writing " << andbytelen << " to file " << std::string(filename) << "\n";
 		fwrite(&andbytelen, sizeof(uint32_t), 1, fp);
 		fwrite(m_vA[i].GetArr(), andbytelen, 1, fp);
 		fwrite(m_vB[i].GetArr(), andbytelen, 1, fp);
@@ -1724,6 +1711,7 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 	/**BYTE pointer used as a buffer to read from the file.*/
 	BYTE *ptr;
 	/**Seek the file pointer to the location of the last read position.*/
+	std::cout << "seeking to position " << m_nFilePos << "\n";
 	if(fseek(fp, m_nFilePos, SEEK_SET))
             std::cout << "Error occured in fseek" << std::endl;
 	/**Reading the num and sizes from the file.*/
@@ -1773,6 +1761,7 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 		m_vD_snd[i].Copy(m_vA[i].GetArr(), 0, andbytelen);
 		m_vE_snd[i].Copy(m_vB[i].GetArr(), 0, stringbytelen);
 
+		std::cout << "current pos: " << m_nFilePos << "\n";
 	}
 
 	/**Storing the current file pointer position for next iteration use of the circuit setup.*/
@@ -1783,9 +1772,12 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 
 BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size) {
 
+	std::cout << "checking if file is good\n\n\n\n";
+
 	/**Check if the file already exists and if the existing is empty. If so, return false.*/
 	if(!filesystem::exists(filename)||filesystem::is_empty(filename)) {
 		/**Returning false and reverting the precomputation mode to default.*/
+		std::cout << "nope: doesn't exist\n";
 		return FALSE;
 	}
 
@@ -1800,6 +1792,7 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 	/**Checking if they are unequal.*/
 	if(circ_size_in_file != in_circ_size) {
 		/**Returning false and reverting the precomputation mode to default.*/
+		std::cout << "nope: incorrect and sizes\n";
 		return FALSE;
 	}
 	/**
@@ -1824,6 +1817,7 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 			/**Close the file*/
 			fclose(fp);
 			/**Returning false and reverting the precomputation mode to default.*/
+		std::cout << "nope: not long enough (" << andbytelen_in_file << " but need " << andbytelen << ")\n";
 			return FALSE;
 		}
 	}

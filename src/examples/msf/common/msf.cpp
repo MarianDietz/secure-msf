@@ -681,6 +681,7 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
+	sharings[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
 	cout << getTime() << ": Start building connectivity circuit\n";
 	cout << "cpus " << nthreads << "\n";

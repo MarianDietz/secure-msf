@@ -130,7 +130,6 @@ void ABYParty::ConnectAndBaseOTs() {
 }
 
 ABYParty::~ABYParty() {
-	m_vSharings[S_BOOL]->PreCompFileDelete();
 	Cleanup();
 }
 

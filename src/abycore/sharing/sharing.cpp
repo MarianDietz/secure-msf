@@ -47,7 +47,7 @@ Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircui
 	m_cCrypto(crypt),
 	m_nSecParamBytes(ceil_divide(m_cCrypto->get_seclvl().symbits, 8)),
 	m_nTypeBitLen(sharebitlen),
-	m_nFilePos(-1),
+	m_nFilePos(0),
 	m_ePhaseValue(ePreCompDefault),
 	m_cCircuitFileDir(circdir)
 {}
@@ -77,30 +77,6 @@ void Sharing::SetPreCompPhaseValue(ePreCompPhase in_phase_value) {
 
 ePreCompPhase Sharing::GetPreCompPhaseValue() {
 	return m_ePhaseValue;
-}
-void Sharing::PreCompFileDelete() {
-	uint64_t truncation_size;
-	filesystem::path filename;
-	if(m_eRole == SERVER) {
-		filename = "pre_comp_server.dump";
-	} else {
-		filename = "pre_comp_client.dump";
-	}
-
-	if((filesystem::exists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
-
-		if(m_nFilePos >= filesystem::file_size(filename)) {
-			filesystem::remove(filename);
-		}
-		else {
-			truncation_size = filesystem::file_size(filename) - m_nFilePos;
-			std::error_code ec;
-			filesystem::resize_file(filename, truncation_size, ec);
-			if(ec) {
-				std::cout << "Error occured in truncate:" << ec.message() << std::endl;
-			}
-		}
-	}
 }
 
 
