@@ -53,6 +53,7 @@ public:
 
 	std::vector<Sharing*>& GetSharings();
 	void ExecCircuit();
+	void ExecSetup(uint32_t num);
 
 	void Reset();
 

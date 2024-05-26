@@ -267,6 +267,60 @@ void ABYParty::ExecCircuit() {
 }
 
 
+void ABYParty::ExecSetup(uint32_t num) {
+	non_lin_vec_ctx* m_vANDs;
+	((BooleanCircuit*)m_vSharings[S_BOOL]->GetCircuitBuildRoutine())->GetANDs(m_vANDs);
+	m_vANDs->numgates = num;
+
+	m_vSharings[S_BOOL]->SetPreCompPhaseValue(ePreCompStore);
+
+	StartRecording("Starting setup phase: ", P_SETUP, m_vSockets);
+	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
+		m_vSharings[i]->PrepareSetupPhase(m_pSetup.get());
+	}
+
+	StartRecording("Starting OT Extension", P_OT_EXT, m_vSockets);
+	m_pSetup->PerformSetupPhase();
+	StopRecording("Time for OT Extension phase: ", P_OT_EXT, m_vSockets);
+
+	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
+		if(i == S_YAO) {
+			StartRecording("Starting Circuit Garbling", P_GARBLE, m_vSockets);
+			if(m_eRole == SERVER) {
+				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
+				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());
+			} else {
+				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());
+				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
+			}
+			/*m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
+			m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());*/
+			m_vSharings[S_YAO]->FinishSetupPhase(m_pSetup.get());
+			m_vSharings[S_YAO_REV]->FinishSetupPhase(m_pSetup.get());
+			StopRecording("Time for Circuit garbling: ", P_GARBLE, m_vSockets);
+		} else if (i == S_YAO_REV) {
+			//Do nothing, was done in parallel to Yao
+		} else {
+			m_vSharings[i]->PerformSetupPhase(m_pSetup.get());
+			m_vSharings[i]->FinishSetupPhase(m_pSetup.get());
+		}
+
+	}
+	StopRecording("Time for setup phase: ", P_SETUP, m_vSockets);
+
+	m_vSharings[S_BOOL]->SetPreCompPhaseValue(ePreCompDefault);
+	m_vANDs->numgates = 0;
+
+#if PRINT_PERFORMANCE_STATS
+	PrintPerformanceStatistics();
+#endif
+
+#if PRINT_COMMUNICATION_STATS
+	PrintCommunication();
+#endif
+}
+
+
 BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t reservegates, const std::string& abycircdir) {
 	// Default reserved gates in abyparty.h constructur
 	m_pCircuit = new ABYCircuit(reservegates);
