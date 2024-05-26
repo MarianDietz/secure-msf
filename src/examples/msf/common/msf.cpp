@@ -623,7 +623,7 @@ void findSubgraphMSFs(ABYParty *party, e_role role) {
 	party->Reset();
 }
 
-int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclvl) {
+int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads) {
 	cin >> n >> m;
 	par.resize(n);
 	adj.resize(n);
@@ -644,7 +644,7 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 		adj[v].insert(e);
 	}
 
-	ABYParty* party = new ABYParty(role, address, port, seclvl);
+	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 
 	//party->ExecSetup(600000000);
@@ -664,15 +664,15 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 	return 0;
 }
 
-int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, int size, int simd) {
-	ABYParty* party = new ABYParty(role, address, port, seclvl);
+int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd) {
+	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
 
 	cout << getTime() << ": Start building connectivity circuit\n";
-	cout << "simd " << simd << "\n";
+	cout << "cpus " << nthreads << "\n";
 
 	vector<vector<vector<uint8_t>>> data;
 	for (int i = 0; i <= size; ++i) {

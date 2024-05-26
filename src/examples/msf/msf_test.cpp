@@ -26,7 +26,7 @@
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* secparam, std::string* address,
-		uint16_t* port, std::string* testing, uint32_t* size, uint32_t* count) {
+		uint16_t* port, uint32_t* nthreads, std::string* testing, uint32_t* size, uint32_t* count) {
 
 	uint32_t int_role = 0, int_port = 0;
 
@@ -35,6 +35,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 			  { (void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false },
 			  {	(void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 			  {	(void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
+			  {	(void*) nthreads, T_NUM, "c", "Number of CPUs, default: 2", false, false },
 			  {	(void*) testing, T_STR, "t", "Testing (msf or connectivity), default: msf", false, false },
 			  {	(void*) size, T_NUM, "k", "Size of test, default: 2", false, false },
 			  {	(void*) count, T_NUM, "n", "Number of tests, default: 1", false, false },
@@ -67,15 +68,16 @@ int main(int argc, char** argv) {
 	std::string testing = "msf";
 	uint32_t size = 2;
 	uint32_t count = 1;
+	uint32_t nthreads = 2;
 
-	read_test_options(&argc, &argv, &role, &secparam, &address, &port, &testing, &size, &count);
+	read_test_options(&argc, &argv, &role, &secparam, &address, &port, &nthreads, &testing, &size, &count);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	if (testing == "msf") {
-		msf(role, address, port, seclvl);
+		msf(role, address, port, seclvl, nthreads);
 	} else if (testing == "connectivity") {
-		test_connectivity(role, address, port, seclvl, size, count);
+		test_connectivity(role, address, port, seclvl, nthreads, size, count);
 	}
 
 	return 0;
