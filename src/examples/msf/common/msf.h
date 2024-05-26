@@ -11,6 +11,8 @@
 
 int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads);
 
+int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, uint64_t num);
+
 int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nhtreads, int size, int simd);
 
 

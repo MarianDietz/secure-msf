@@ -656,8 +656,19 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 		rounds++;
 	}
 
-	//findSubgraphMSFs(party, role);
+	findSubgraphMSFs(party, role);
 	cout << "rounds: " << rounds << "\n";
+
+	delete party;
+
+	return 0;
+}
+
+int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, uint64_t num) {
+	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
+	party->ConnectAndBaseOTs();
+
+	party->ExecSetup(num);
 
 	delete party;
 
