@@ -71,6 +71,14 @@ struct SubgraphEdge {
 		this->w = e.w;
 	}
 
+	SubgraphEdge(int u, int v, int orig_u, int orig_v, weight_t w) {
+		this->u = u;
+		this->v = v;
+		this->orig_u = orig_u;
+		this->orig_v = orig_v;
+		this->w = w;
+	}
+
 };
 
 int n, m;
@@ -422,6 +430,25 @@ share* CreateRandIntCircuit(share *bound, int simd, BooleanCircuit* circ) {
 	return c[0];
 }
 
+void CreatePrefixSumCircuit(vector<share*> &a, BooleanCircuit* circ) {
+	for (int i = 1; i < a.size(); ++i) {
+		a[i] = circ->PutADDGate(a[i-1], a[i]);
+		//cout << "depth: " << circ->GetMaxDepth() << "\n";
+	}
+	// if (a.size() == 1) return;
+	// vector<share*> b;
+	// for (int i = 1; i < a.size(); i += 2) {
+	// 	b.push_back(circ->PutADDGate(a[i-1], a[i]));
+	// }
+	// CreatePrefixSumCircuit(b, circ);
+	// for (int i = 1; i < a.size(); i += 2) {
+	// 	a[i] = b[i/2];
+	// }
+	// for (int i = 2; i < a.size(); i += 2) {
+	// 	a[i] = circ->PutADDGate(b[i/2-1], a[i]);
+	// }
+}
+
 vector<share*> CreateSubgraphCircuit(int k, vector<vector<vector<vector<SubgraphEdge>>>> &e, BooleanCircuit* circ) {
 	int vertex_bitlen = 1;
 	while ((1 << vertex_bitlen) < k) vertex_bitlen++;
@@ -448,10 +475,9 @@ vector<share*> CreateSubgraphCircuit(int k, vector<vector<vector<vector<Subgraph
 	share *zero = circ->PutSIMDCONSGate(e.size(), (UGATE_T) 0, edgecount_bitlen);
 	for (int z = 0; z < k-1; ++z) {
 		// cout << "iteration " << z << "\n";
-		vector<share*> apre(a.size());
-		apre[0] = a[0];
-		for (int i = 1; i < a.size(); ++i)
-			apre[i] = circ->PutADDGate(apre[i-1], a[i]);
+		vector<share*> apre = a;
+		CreatePrefixSumCircuit(apre, circ);
+
 		share *r = CreateRandIntCircuit(apre.back(), e.size(), circ);
 
 		// cout << "step 1\n";
@@ -556,12 +582,10 @@ vector<share*> CreateSubgraphCircuit(int k, vector<vector<vector<vector<Subgraph
 	}
 	delete zero;
 
-	for (int i = 0; i < k; ++i)
-		delete u[i];
+	for (int i = 0; i < k; ++i) delete u[i];
 	
 	vector<share*> outs;
 	for (int i = 0; i < s.size(); ++i) {
-		// circ->PutPrintValueGate(s[i], "edge");
 		outs.push_back(circ->PutOUTGate(s[i], i%2 ? CLIENT : SERVER));
 		delete s[i]; delete a[i];
 	}
@@ -684,7 +708,6 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	sharings[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
 	cout << getTime() << ": Start building connectivity circuit\n";
-	cout << "cpus " << nthreads << "\n";
 
 	vector<vector<vector<uint8_t>>> data;
 	for (int i = 0; i <= size; ++i) {
@@ -696,6 +719,36 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	cout << getTime() << ": Start running connectivity circuit\n";
 	party->ExecCircuit();
 	cout << getTime() << ": Finished running connectivity circuit\n";
+
+	delete party;
+
+	return 0;
+}
+
+int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd) {
+	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
+	party->ConnectAndBaseOTs();
+
+	std::vector<Sharing*>& sharings = party->GetSharings();
+	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
+	sharings[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
+
+	cout << getTime() << ": Start building subgraph circuit\n";
+
+	vector<vector<vector<vector<SubgraphEdge>>>> subgraphs;
+	for (int i = 0; i < simd; ++i) {
+		subgraphs.emplace_back(size);
+		for (int j = 0; j < size; ++j) {
+			subgraphs.back()[j].resize(j);
+			for (int k = 0; k < j; ++k)
+				subgraphs.back()[j][k].push_back(SubgraphEdge(j, k, j, k, 0));
+		}
+	}
+	CreateSubgraphCircuit(size, subgraphs, circ);
+
+	cout << getTime() << ": Start running subgraph circuit\n";
+	party->ExecCircuit();
+	cout << getTime() << ": Finished running subgraph circuit\n";
 
 	delete party;
 

@@ -15,5 +15,7 @@ int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl se
 
 int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nhtreads, int size, int simd);
 
+int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd);
+
 
 #endif

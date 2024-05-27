@@ -36,9 +36,9 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 			  {	(void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 			  {	(void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
 			  {	(void*) nthreads, T_NUM, "c", "Number of CPUs, default: 2", false, false },
-			  {	(void*) testing, T_STR, "t", "Testing (msf/genots/connectivity), default: msf", false, false },
+			  {	(void*) testing, T_STR, "t", "Testing (msf/genots/connectivity/subgraph), default: msf", false, false },
 			  {	(void*) size, T_NUM, "k", "Size of test, default: 2", false, false },
-			  {	(void*) count, T_NUM, "n", "Number of repititions (number of AND's for genots; or simd length for connectivity), default: 1", false, false },
+			  {	(void*) count, T_NUM, "n", "Number of repititions (number of AND's for genots; or simd length for connectivity/subgraph), default: 1", false, false },
 			};
 
 	if (!parse_options(argcp, argvp, options,
@@ -80,6 +80,8 @@ int main(int argc, char** argv) {
 		genOTs(role, address, port, seclvl, nthreads, count);
 	} else if (testing == "connectivity") {
 		test_connectivity(role, address, port, seclvl, nthreads, size, count);
+	} else if (testing == "subgraph") {
+		test_subgraph(role, address, port, seclvl, nthreads, size, count);
 	}
 
 	return 0;

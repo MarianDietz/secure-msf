@@ -372,7 +372,8 @@ public:
 
 
 	share* PutANDVecGate(share* ina, share* inb);
-	std::vector<uint32_t> PutMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vecand = true);
+	std::vector<uint32_t> PutMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vecand = false);
+	// For our application of MSF's, we choose vecand=false, so that there are no issues with incorrect types of preprocessed OTs
 
 	share* PutVecANDMUXGate(share* a, share* b, share* s);
 	std::vector<uint32_t> PutVecANDMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, std::vector<uint32_t> s);
