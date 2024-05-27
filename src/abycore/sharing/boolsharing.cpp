@@ -36,6 +36,9 @@ void BoolSharing::Init() {
 	m_nXORGates = 0;
 	m_nOPLUT_Tables = 0;
 
+	m_nFilePosA = m_nFilePosB = m_nFilePosC = 0;
+	m_remainingAndBytes = 0;
+
 	m_nNumANDSizes = 0;
 
 	m_nInputShareSndSize = 0;
@@ -44,6 +47,15 @@ void BoolSharing::Init() {
 	m_nOutputShareRcvSize = 0;
 
 	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext, m_cCircuitFileDir);
+
+	char filename[21];
+	if(m_eRole == SERVER) {
+		strcpy(filename, "pre_comp_server.dump");
+	}
+	else {
+		strcpy(filename, "pre_comp_client.dump");
+	}
+	readFileMetadata(filename);
 
 #ifdef BENCHBOOLTIME
 	m_nCombTime = 0;
@@ -109,7 +121,6 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 		//Is needed to pad the MTs to a byte, deleting this will make the online phase really messy and (probably) inefficient
 		m_nNumMTs[i] = m_vANDs[i].numgates > 0? m_vANDs[i].numgates + (8 * m_cBoolCircuit->GetMaxDepth()) : m_vANDs[i].numgates;
 		m_nTotalNumMTs += m_vANDs[i].numgates;
-		std::cout << "and's: " << m_vANDs[i].numgates << " mt's\n";
 	}
 
 	//8*circuit_depth are needed since the mtidx is padded to the next byte after each layer
@@ -123,8 +134,9 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 		within the provided specification of the precomputation values stored in the file.
 		If it not within the spec, reverting to default mode.
 	*/
-	if((GetPreCompPhaseValue()==ePreCompRead)&&(!isCircuitSizeLessThanOrEqualWithValueFromFile(filename, m_nNumANDSizes))) {
-			SetPreCompPhaseValue(ePreCompDefault);
+	if((GetPreCompPhaseValue()==ePreCompRead)&&(!isCircuitSizeLessThanOrEqualRemainingAndBytes(filename, m_nNumANDSizes))) {
+		std::cout << "reverting to on-demand MT generation\n";
+		SetPreCompPhaseValue(ePreCompDefault);
 	}
 
 
@@ -1710,74 +1722,51 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 	fp = fopen(filename, "rb");
 	/**BYTE pointer used as a buffer to read from the file.*/
 	BYTE *ptr;
-	/**Seek the file pointer to the location of the last read position.*/
-	std::cout << "seeking to position " << m_nFilePos << "\n";
-	if(fseek(fp, m_nFilePos, SEEK_SET))
-            std::cout << "Error occured in fseek" << std::endl;
-	/**Reading the num and sizes from the file.*/
-	if(!fread(&num_and_sizes, sizeof(uint32_t), 1, fp))
-            std::cout << "Error occured in fread" << std::endl;;
-	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 
-		/**Calculating the required ANDGatelength in bytes for the provided circuit configuration.*/
-		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
-		uint32_t org_andbytelen;
-		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
+	assert(m_nNumANDSizes == 1);
 
-		/**Reading the ANDGate length in bytes from file.*/
-		if(!fread(&org_andbytelen, sizeof(uint32_t), 1, fp))
-                    std::cout << "Error occured in fread" << std::endl;
+	/**Calculating the required ANDGatelength in bytes for the provided circuit configuration.*/
+	uint32_t andbytelen = ceil_divide(m_nNumMTs[0], 8);
+	uint32_t stringbytelen = ceil_divide(m_nNumMTs[0] * m_vANDs[0].bitlen, 8);
 
-		/**Allocating the memory for the BYTE pointer with the read ANDGate lenght size from the file.*/
-		ptr = (BYTE*)malloc(org_andbytelen*sizeof(BYTE));
+	/**Allocating the memory for the BYTE pointer with the read ANDGate lenght size from the file.*/
+	ptr = (BYTE*)malloc(andbytelen*sizeof(BYTE));
 
-		/**
-			If unequal means the bytes should be read from the file with original byte size else if
-			the configured size.
-		*/
-		if(org_andbytelen != andbytelen) {
+	std::cout << "seeking to file locations " << m_nFilePosA << " " << m_nFilePosB << " " << m_nFilePosC << "\n";
 
-			if(!fread(ptr, org_andbytelen, 1, fp))
-                            std::cout << "Error occured in fread" << std::endl;
-			m_vA[i].Copy(ptr, 0, andbytelen);
-			if(!fread(ptr, org_andbytelen, 1, fp))
-                            std::cout << "Error occured in fread" << std::endl;
-			m_vB[i].Copy(ptr, 0, andbytelen);
-			if(!fread(ptr, org_andbytelen, 1, fp))
-                                std::cout << "Error occured in fread" << std::endl;
-			m_vC[i].Copy(ptr, 0, andbytelen);
-		}
-		else {
-			if(!fread(ptr, andbytelen, 1, fp))
-                            std::cout << "Error occured in fread" << std::endl;
-			m_vA[i].Copy(ptr, 0, andbytelen);
-			if(!fread(ptr, andbytelen, 1, fp))
-                                std::cout << "Error occured in fread" << std::endl;
-			m_vB[i].Copy(ptr, 0, andbytelen);
-			if(!fread(ptr, andbytelen, 1, fp))
-                            std::cout << "Error occured in fread" << std::endl;
-			m_vC[i].Copy(ptr, 0, andbytelen);
-		}
-		m_vD_snd[i].Copy(m_vA[i].GetArr(), 0, andbytelen);
-		m_vE_snd[i].Copy(m_vB[i].GetArr(), 0, stringbytelen);
+	if(fseek(fp, m_nFilePosA, SEEK_SET))
+			std::cout << "Error occured in fseek" << std::endl;
+	if(!fread(ptr, andbytelen, 1, fp))
+					std::cout << "Error occured in fread" << std::endl;
+	m_nFilePosA = ftell(fp);
+	m_vA[0].Copy(ptr, 0, andbytelen);
 
-		std::cout << "current pos: " << m_nFilePos << "\n";
-	}
+	if(fseek(fp, m_nFilePosB, SEEK_SET))
+			std::cout << "Error occured in fseek" << std::endl;
+	if(!fread(ptr, andbytelen, 1, fp))
+						std::cout << "Error occured in fread" << std::endl;
+	m_nFilePosB = ftell(fp);
+	m_vB[0].Copy(ptr, 0, andbytelen);
 
-	/**Storing the current file pointer position for next iteration use of the circuit setup.*/
-	m_nFilePos = ftell(fp);
+	if(fseek(fp, m_nFilePosC, SEEK_SET))
+			std::cout << "Error occured in fseek" << std::endl;
+	if(!fread(ptr, andbytelen, 1, fp))
+					std::cout << "Error occured in fread" << std::endl;
+	m_nFilePosC = ftell(fp);
+	m_vC[0].Copy(ptr, 0, andbytelen);
+		
+	m_vD_snd[0].Copy(m_vA[0].GetArr(), 0, andbytelen);
+	m_vE_snd[0].Copy(m_vB[0].GetArr(), 0, stringbytelen);
+
 	/**Closing the file.*/
 	fclose(fp);
 }
 
-BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size) {
-
-	std::cout << "checking if file is good\n\n\n\n";
-
+BOOL BoolSharing::readFileMetadata(char *filename) {
 	/**Check if the file already exists and if the existing is empty. If so, return false.*/
 	if(!filesystem::exists(filename)||filesystem::is_empty(filename)) {
 		/**Returning false and reverting the precomputation mode to default.*/
-		std::cout << "nope: doesn't exist\n";
+		std::cout << "file doesn't exist\n";
 		return FALSE;
 	}
 
@@ -1790,38 +1779,41 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 	if(!fread(&circ_size_in_file, sizeof(uint32_t), 1, fp))
             std::cout << "Error occured in fread" << std::endl;
 	/**Checking if they are unequal.*/
-	if(circ_size_in_file != in_circ_size) {
+	if(circ_size_in_file != 1) {
 		/**Returning false and reverting the precomputation mode to default.*/
-		std::cout << "nope: incorrect and sizes\n";
+		std::cout << "file has incorrect AND sizes\n";
 		return FALSE;
 	}
-	/**
-	 Checking the byte length of the MTs in the file with the required size.
-	 If it is value in the file is less than the required then, the precomputation
-	 mode is reverted to defaut.
-	*/
-	for (uint32_t i = 0; i < circ_size_in_file; i++) {
-		/**Calculating the AND gate length in bytes for the provided circuit configuration.*/
-		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
-		/**Reading the AND gate length in bytes from the file.*/
-		if(!fread(&andbytelen_in_file, sizeof(uint32_t), 1, fp))
-                    std::cout << "Error occured in fread" << std::endl;
-		uint32_t traverseMT_size_in_file = andbytelen_in_file*3;
+	/**Reading the AND gate length in bytes from the file.*/
+	if(!fread(&andbytelen_in_file, sizeof(uint32_t), 1, fp))
+				std::cout << "Error occured in fread" << std::endl;
+	
+	m_remainingAndBytes = andbytelen_in_file;
+	std::cout << "found " << m_remainingAndBytes << " bytes in preprocessing file\n";
 
-		/**Shifting through the MTs based on the ANDGate size in byte length.*/
-		fseek(fp, (ftell(fp) + traverseMT_size_in_file), SEEK_SET);
-
-		/**Checking if the condition of size of byte length in file is lower than byte length required.*/
-		if(andbytelen > andbytelen_in_file) {
-
-			/**Close the file*/
-			fclose(fp);
-			/**Returning false and reverting the precomputation mode to default.*/
-		std::cout << "nope: not long enough (" << andbytelen_in_file << " but need " << andbytelen << ")\n";
-			return FALSE;
-		}
-	}
-	/**Close the file*/
+	m_nFilePosA = ftell(fp);
+	m_nFilePosB = m_nFilePosA + andbytelen_in_file;
+	m_nFilePosC = m_nFilePosB + andbytelen_in_file;
+	
 	fclose(fp);
+	return TRUE;
+}
+
+BOOL BoolSharing::isCircuitSizeLessThanOrEqualRemainingAndBytes(char *filename, uint32_t in_circ_size) {
+
+	if(1 != in_circ_size) {
+		/**Returning false and reverting the precomputation mode to default.*/
+		std::cout << "circuit has incompatible AND sizes!\n";
+		return FALSE;
+	}
+	
+	/**Calculating the AND gate length in bytes for the provided circuit configuration.*/
+	uint32_t andbytelen = ceil_divide(m_nNumMTs[0], 8);
+
+	if (andbytelen > m_remainingAndBytes) {
+		std::cout << "preprocessing file is too small (" << m_remainingAndBytes << " unconsumed bytes remaining, but need " << andbytelen << ")\n";
+		return FALSE;
+	}
+	
 	return TRUE;
 }

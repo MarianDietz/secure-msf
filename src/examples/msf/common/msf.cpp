@@ -110,7 +110,7 @@ void recomputeWeights(ABYParty *party) {
 		i++;
 	}
 
-	cout << getTime() << ": Start building weight circuit\n";
+	//cout << getTime() << ": Start building weight circuit\n";
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
@@ -123,9 +123,9 @@ void recomputeWeights(ABYParty *party) {
 
 	delete w_best0; delete w_best1; delete comparison; delete w_best;
 
-	cout << getTime() << ": Start running weight circuit\n";
+	//cout << getTime() << ": Start running weight circuit\n";
 	party->ExecCircuit();
-	cout << getTime() << ": Finished running weight circuit\n";
+	//cout << getTime() << ": Finished running weight circuit\n";
 
 	uint32_t *out, bitlen, nvals;
 	output->get_clear_value_vec(&out, &bitlen, &nvals);
@@ -237,12 +237,12 @@ vector<vector<int>> FinishConnectivity(weight_t w, int pos, vector<vector<uint32
 
 	vector<vector<int>> res;
 
-	for (int i = 0; i <= k; ++i) {
-		for (int j = 0; j <= i; ++j) {
-			cout << matrix[i][j][pos] << " ";
-		}
-		cout << "\n";
-	}
+	// for (int i = 0; i <= k; ++i) {
+	// 	for (int j = 0; j <= i; ++j) {
+	// 		cout << matrix[i][j][pos] << " ";
+	// 	}
+	// 	cout << "\n";
+	// }
 
 	set<int> done;
 	for (int i = 0; i < k; ++i) {
@@ -264,11 +264,11 @@ vector<vector<int>> FinishConnectivity(weight_t w, int pos, vector<vector<uint32
 }
 
 int merge(vector<int> &comp, weight_t w) {
-	cout << "MERGING:";
-	for (int u : comp) {
-		cout << " " << u;
-	}
-	cout << "\n";
+	// cout << "MERGING:";
+	// for (int u : comp) {
+	// 	cout << " " << u;
+	// }
+	// cout << "\n";
 
 	for (int u : comp) weightVertices[w].erase(u);
 	if (weightVertices[w].empty()) weightVertices.erase(w);
@@ -334,7 +334,7 @@ void reconnect(ABYParty *party) {
 		populateConnectivityData(w, mp[k]);
 	}
 
-	cout << getTime() << ": Start building connectivity circuit\n";
+	//cout << getTime() << ": Start building connectivity circuit\n";
 
 	map<int, vector<vector<share*>>> matrices;
 	for (auto &a : mp) {
@@ -342,9 +342,9 @@ void reconnect(ABYParty *party) {
 		matrices[a.first] = CreateConnectivityCircuit(a.first, a.second, circ);
 	}
 	
-	cout << getTime() << ": Start running connectivity circuit\n";
+	//cout << getTime() << ": Start running connectivity circuit\n";
 	party->ExecCircuit();
-	cout << getTime() << ": Finished running connectivity circuit\n";
+	//cout << getTime() << ": Finished running connectivity circuit\n";
 
 	map<int, vector<vector<uint32_t*>>> mpres;
 	for (const auto &a : matrices) {
@@ -409,6 +409,7 @@ share* CreateRandIntCircuit(share *bound, int simd, BooleanCircuit* circ) {
 		ok.push_back(circ->PutGTGate(bound, s));
 		delete r;
 	}
+	delete padded;
 
 	while (c.size() > 1) {
 		vector<share*> cnew;
@@ -426,6 +427,7 @@ share* CreateRandIntCircuit(share *bound, int simd, BooleanCircuit* circ) {
 		c = cnew;
 		ok = oknew;
 	}
+	delete ok[0];
 
 	return c[0];
 }
@@ -542,7 +544,8 @@ vector<share*> CreateSubgraphCircuit(int k, vector<vector<vector<vector<Subgraph
 			// if (k == 3) cout << i << " " << j << " " << p << "\n";
 			share *eq = circ->PutEQGate(u[i], u[j]);
 			share *anew = circ->PutMUXGate(zero, a[q], eq);
-			delete eq; // delete a[q];
+			delete eq;
+			if (q) delete a[q];
 			a[q] = anew;
 
 			share *cond;
@@ -572,7 +575,7 @@ vector<share*> CreateSubgraphCircuit(int k, vector<vector<vector<vector<Subgraph
 		// if (k == 3) circ->PutPrintValueGate(r, "r");
 		// if (k == 3) for (int i = 0; i < apre.size(); ++i) circ->PutPrintValueGate(apre[i], "apre[" + to_string(i) + "]");
 
-		for (int i = 1; i < a.size(); ++i) delete apre[i];
+		for (int i = 0; i < a.size(); ++i) delete apre[i];
 		for (share *sh : g) delete sh;
 		delete r;
 
@@ -607,10 +610,9 @@ void findSubgraphMSFs(ABYParty *party, e_role role) {
 		//cout << "\n";
 	}
 
-	cout << getTime() << ": Start running subgraph circuit\n";
-	sharings[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
+	//cout << getTime() << ": Start running subgraph circuit\n";
 	party->ExecCircuit();
-	cout << getTime() << ": Finished running subgraph circuit\n";
+	//cout << getTime() << ": Finished running subgraph circuit\n";
 
 	for (auto &a : subgraphs) {
 		int k = a.first;
@@ -670,18 +672,37 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
+	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
+
+	MSFResetTimers();
+
+	MSFStartWatch("Total", MP_TOTAL);
 
 	//party->ExecSetup(600000000);
 
-	int rounds = 0;
+	int rounds = 1;
 	while (!needRecomputing.empty()) {
+		cout << "round " << rounds << ": weights...\n";
 		recomputeWeights(party);
+		cout << "round " << rounds << ": connectivity...\n";
 		if (!needReconnecting.empty()) reconnect(party);
 		rounds++;
 	}
 
+	MSFStopWatch("Total", MP_TOTAL);
+	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
+	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
+	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
+	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
+
+	cout << "subgraphs...\n";
 	findSubgraphMSFs(party, role);
-	cout << "rounds: " << rounds << "\n";
+
+	MSFStopWatch("Total", MP_TOTAL);
+	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
+	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
+	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
+	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
 
 	delete party;
 
@@ -702,12 +723,12 @@ int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl se
 int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd) {
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
+	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
-	sharings[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
-	cout << getTime() << ": Start building connectivity circuit\n";
+	//cout << getTime() << ": Start building connectivity circuit\n";
 
 	vector<vector<vector<uint8_t>>> data;
 	for (int i = 0; i <= size; ++i) {
@@ -716,9 +737,9 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	}
 	CreateConnectivityCircuit(size, data, circ);
 	
-	cout << getTime() << ": Start running connectivity circuit\n";
+	//cout << getTime() << ": Start running connectivity circuit\n";
 	party->ExecCircuit();
-	cout << getTime() << ": Finished running connectivity circuit\n";
+	//cout << getTime() << ": Finished running connectivity circuit\n";
 
 	delete party;
 
@@ -728,12 +749,12 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd) {
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
+	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
-	sharings[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
-	cout << getTime() << ": Start building subgraph circuit\n";
+	//cout << getTime() << ": Start building subgraph circuit\n";
 
 	vector<vector<vector<vector<SubgraphEdge>>>> subgraphs;
 	for (int i = 0; i < simd; ++i) {
@@ -746,9 +767,10 @@ int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, se
 	}
 	CreateSubgraphCircuit(size, subgraphs, circ);
 
-	cout << getTime() << ": Start running subgraph circuit\n";
+	//cout << getTime() << ": Start running subgraph circuit\n";
 	party->ExecCircuit();
-	cout << getTime() << ": Finished running subgraph circuit\n";
+	//cout << getTime() << ": Finished running subgraph circuit\n";
+	cout << sizeof(GATE) << "\n";
 
 	delete party;
 

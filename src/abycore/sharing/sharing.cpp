@@ -47,7 +47,6 @@ Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircui
 	m_cCrypto(crypt),
 	m_nSecParamBytes(ceil_divide(m_cCrypto->get_seclvl().symbits, 8)),
 	m_nTypeBitLen(sharebitlen),
-	m_nFilePos(0),
 	m_ePhaseValue(ePreCompDefault),
 	m_cCircuitFileDir(circdir)
 {}

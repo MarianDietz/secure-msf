@@ -75,6 +75,8 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 
 	StartWatch("Initialization", P_INIT);
 
+	MSFResetTimers();
+
 #if BENCH_HARDWARE
 	bench_aes();
 #endif
@@ -190,9 +192,11 @@ void ABYParty::ExecCircuit() {
 	ConnectAndBaseOTs();
 
 	StartRecording("Starting execution", P_TOTAL, m_vSockets);
+	MSFStartRecording("ABY Total", MP_ABY, m_vSockets);
 
 	//Setup phase
 	StartRecording("Starting setup phase: ", P_SETUP, m_vSockets);
+	MSFStartRecording("Setup", MP_SETUP, m_vSockets);
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 #ifndef BATCH
 		std::cout << "Preparing setup phase for " << m_vSharings[i]->sharing_type() << " sharing" << std::endl;
@@ -234,6 +238,7 @@ void ABYParty::ExecCircuit() {
 
 	}
 	StopRecording("Time for setup phase: ", P_SETUP, m_vSockets);
+	MSFStopRecording("Setup", MP_SETUP, m_vSockets);
 
 #ifndef BATCH
 	std::cout << "Evaluating circuit" << std::endl;
@@ -248,6 +253,7 @@ void ABYParty::ExecCircuit() {
 
 
 	StopRecording("Total Time: ", P_TOTAL, m_vSockets);
+	MSFStopRecording("ABY total", MP_ABY, m_vSockets);
 
 #ifdef PRINT_OUTPUT
 	//Print input and output gates
@@ -420,7 +426,9 @@ BOOL ABYParty::EvaluateCircuit() {
 #if BENCHONLINEPHASE
 		clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
+		MSFStartRecording("Network", MP_NETWORK, m_vSockets);
 		PerformInteraction();
+		MSFStopRecording("Network", MP_NETWORK, m_vSockets);
 #if BENCHONLINEPHASE
 		clock_gettime(CLOCK_MONOTONIC, &tend);
 		interaction += getMillies(tstart, tend);

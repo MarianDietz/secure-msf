@@ -134,6 +134,8 @@ private:
 
 	uint32_t m_nNumANDSizes;
 
+	uint64_t m_nFilePosA, m_nFilePosB, m_nFilePosC;/**< Variable which stores the position of the file pointer. */
+	uint32_t m_remainingAndBytes;
 
 	std::vector<CBitVector> m_vA; //Dim 1 for all pairs of sender / receiver, Dim 2 for MTs of different bitlengths as sender / receiver
 	std::vector<CBitVector> m_vB; //value B of a multiplication triple
@@ -280,10 +282,11 @@ private:
 	 Method for read MTs from file
 	*/
 	void ReadMTsFromFile(const char *filename);
+	BOOL readFileMetadata(char *filename);
 	/**
 	Method to check if it is the right nvals or the circuit size.
 	*/
-	BOOL isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size);
+	BOOL isCircuitSizeLessThanOrEqualRemainingAndBytes(char *filename, uint32_t in_circ_size);
 
 
 	/**

@@ -23,6 +23,7 @@
 #include <ENCRYPTO_utils/timer.h>
 #include <memory>
 #include <vector>
+#include "msftimer.h"
 
 #ifdef DEBUGCOMM
 #include <mutex>
