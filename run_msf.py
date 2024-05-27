@@ -75,6 +75,8 @@ def generate_bounded(n,m,w,t):
     for i in range(m1,m):
         res2 += str(e[i][0]) + " " + str(e[i][1]) + " " + str(e[i][2]) + "\n"
     write_inputs(name, res1, res2)
+    
+    return name
 
 def run_bounded(n,m,w,t,party,address):
     name = generate_bounded(n,m,w,t)
@@ -85,17 +87,27 @@ address = input()
 
 unique = [
     (10, 30, 1),
-    (50, 150, 1),
+    (20, 60, 1),
     (100, 300, 1),
-    (500, 1500, 1),
+    (200, 600, 1),
     (1000, 3000, 1),
-    (5000, 15000, 1),
+    (2000, 6000, 1),
     (10000, 30000, 1),
-    (50000, 150000, 1),
+    (20000, 60000, 1),
     (100000, 300000, 1),
 ]
 
+bounded = []
 for (n,m,t) in unique:
+    for w in [1.0,0.5,0.2,0.1]:
+        bounded.append((n,m,w,t))
+
+# for (n,m,t) in unique:
+#     if party == 1:
+#         time.sleep(5)
+#     run_unique(n,m,t,party,address)
+
+for (n,m,w,t) in bounded:
     if party == 1:
         time.sleep(5)
-    run_unique(n,m,t,party,address)
+    run_bounded(n,m,w,t,party,address)
