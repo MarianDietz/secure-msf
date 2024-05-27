@@ -29,3 +29,7 @@ CTestTestfile.cmake
 
 # VS Code Directory
 .vscode/
+
+# MSF files
+inputs/
+stats/

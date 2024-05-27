@@ -26,7 +26,7 @@
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* secparam, std::string* address,
-		uint16_t* port, uint32_t* nthreads, std::string* testing, uint32_t* size, uint32_t* count) {
+		uint16_t* port, uint32_t* nthreads, std::string* testing, uint32_t* size, uint32_t* count, std::string* stats_path) {
 
 	uint32_t int_role = 0, int_port = 0;
 
@@ -39,6 +39,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 			  {	(void*) testing, T_STR, "t", "Testing (msf/genots/connectivity/subgraph), default: msf", false, false },
 			  {	(void*) size, T_NUM, "k", "Size of test, default: 2", false, false },
 			  {	(void*) count, T_NUM, "n", "Number of repititions (number of AND's for genots; or simd length for connectivity/subgraph), default: 1", false, false },
+			  {	(void*) stats_path, T_STR, "f", "Path for stats output file", false, false },
 			};
 
 	if (!parse_options(argcp, argvp, options,
@@ -69,19 +70,20 @@ int main(int argc, char** argv) {
 	uint32_t size = 2;
 	uint32_t count = 1;
 	uint32_t nthreads = 2;
+	std::string stats_path = "";
 
-	read_test_options(&argc, &argv, &role, &secparam, &address, &port, &nthreads, &testing, &size, &count);
+	read_test_options(&argc, &argv, &role, &secparam, &address, &port, &nthreads, &testing, &size, &count, &stats_path);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	if (testing == "msf") {
-		msf(role, address, port, seclvl, nthreads);
+		msf(role, address, port, seclvl, nthreads, stats_path);
 	} else if (testing == "genots") {
-		genOTs(role, address, port, seclvl, nthreads, count);
+		genOTs(role, address, port, seclvl, nthreads, stats_path, count);
 	} else if (testing == "connectivity") {
-		test_connectivity(role, address, port, seclvl, nthreads, size, count);
+		test_connectivity(role, address, port, seclvl, nthreads, stats_path, size, count);
 	} else if (testing == "subgraph") {
-		test_subgraph(role, address, port, seclvl, nthreads, size, count);
+		test_subgraph(role, address, port, seclvl, nthreads, stats_path, size, count);
 	}
 
 	return 0;

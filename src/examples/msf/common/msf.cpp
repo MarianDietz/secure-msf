@@ -95,6 +95,8 @@ set<weight_t> needReconnecting; // weights for which we need to run connectivity
 
 map<int, vector<vector<vector<vector<SubgraphEdge>>>>> subgraphs;
 
+uint64_t count_ands_bestweight = 0, count_ands_connectivity = 0, count_ands_subgraph;
+
 int64_t getTime() {
 	return chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 }
@@ -124,6 +126,7 @@ void recomputeWeights(ABYParty *party) {
 	delete w_best0; delete w_best1; delete comparison; delete w_best;
 
 	//cout << getTime() << ": Start running weight circuit\n";
+	count_ands_bestweight += circ->GetNumANDGates();
 	party->ExecCircuit();
 	//cout << getTime() << ": Finished running weight circuit\n";
 
@@ -343,6 +346,7 @@ void reconnect(ABYParty *party) {
 	}
 	
 	//cout << getTime() << ": Start running connectivity circuit\n";
+	count_ands_connectivity += circ->GetNumANDGates();
 	party->ExecCircuit();
 	//cout << getTime() << ": Finished running connectivity circuit\n";
 
@@ -611,6 +615,7 @@ void findSubgraphMSFs(ABYParty *party, e_role role) {
 	}
 
 	//cout << getTime() << ": Start running subgraph circuit\n";
+	count_ands_subgraph += circ->GetNumANDGates();
 	party->ExecCircuit();
 	//cout << getTime() << ": Finished running subgraph circuit\n";
 
@@ -639,7 +644,7 @@ void findSubgraphMSFs(ABYParty *party, e_role role) {
 					edgecount_t val = clear[i][j][z];
 					if (val != edgecount_dummy) {
 						SubgraphEdge &e = subgraph[i][j][val];
-						cout << "found edge " << e.orig_u << "-" << e.orig_v << " of weight " << e.w << "\n";
+						//cout << "found edge " << e.orig_u << "-" << e.orig_v << " of weight " << e.w << "\n";
 					}
 				}
 			}
@@ -649,7 +654,7 @@ void findSubgraphMSFs(ABYParty *party, e_role role) {
 	party->Reset();
 }
 
-int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads) {
+int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, std::string& stats_path) {
 	cin >> n >> m;
 	par.resize(n);
 	adj.resize(n);
@@ -678,8 +683,6 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 
 	MSFStartWatch("Total", MP_TOTAL);
 
-	//party->ExecSetup(600000000);
-
 	int rounds = 1;
 	while (!needRecomputing.empty()) {
 		cout << "round " << rounds << ": weights...\n";
@@ -689,25 +692,40 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 		rounds++;
 	}
 
+	ofstream stats;
+	stats.open(stats_path);
+
+	MSFStopWatch("Total", MP_TOTAL);
+	stats << "iterations " << rounds-1 << "\n";
+	stats << "phase1(total/aby/setup/network) " << mp_tTimes[MP_TOTAL].timing << " " << mp_tTimes[MP_ABY].timing << " " << mp_tTimes[MP_SETUP].timing << " " << mp_tTimes[MP_NETWORK].timing << "\n";
+	stats << "phase1(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
+	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
 	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
 	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
 	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
+	MSFResetTimers();
 
 	cout << "subgraphs...\n";
 	findSubgraphMSFs(party, role);
 
 	MSFStopWatch("Total", MP_TOTAL);
+	stats << "phase2(total/aby/setup/network) " << mp_tTimes[MP_TOTAL].timing << " " << mp_tTimes[MP_ABY].timing << " " << mp_tTimes[MP_SETUP].timing << " " << mp_tTimes[MP_NETWORK].timing << "\n";
+	stats << "phase2(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
 	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
 	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
 	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
 	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
+
+	stats << "ands(computew,connectivity,subgraph) " << count_ands_bestweight << " " << count_ands_connectivity << " " << count_ands_subgraph << "\n";
+
+	stats.close();
 
 	delete party;
 
 	return 0;
 }
 
-int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, uint64_t num) {
+int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, std::string& stats_path, uint64_t num) {
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 
@@ -718,7 +736,7 @@ int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl se
 	return 0;
 }
 
-int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd) {
+int32_t test_connectivity(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, std::string& stats_path, int size, int simd) {
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
@@ -744,7 +762,7 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	return 0;
 }
 
-int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, int size, int simd) {
+int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nthreads, std::string& stats_path, int size, int simd) {
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
