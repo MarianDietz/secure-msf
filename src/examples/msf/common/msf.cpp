@@ -689,8 +689,6 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 		rounds++;
 	}
 
-	MSFStopWatch("Total", MP_TOTAL);
-	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
 	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
 	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
 	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
