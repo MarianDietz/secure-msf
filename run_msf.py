@@ -15,10 +15,14 @@ def write_inputs(name, s1, s2):
     f2.close()
 
 def run(name, party, address):
+    if os.path.exists('stats/' + name + '-p' + str(party) + '.txt'):
+        print('=== Skipping ' + name + ' ===')
+        return
+    print('=== Running ' + name + ' ===')
     with open('inputs/' + name + '/p' + str(party) + '.txt', 'r') as f:
         subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/' + name + '-p' + str(party) + '.txt'], stdin=f, text=True)
 
-def generate_unique(n,m,t):
+def generate_unique(name,n,m,t):
     name = 'unique-' + str(n) + '-' + str(m) + '-' + str(t)
     seed(name)
 
@@ -42,14 +46,12 @@ def generate_unique(n,m,t):
         res2 += str(e[i][0]) + " " + str(e[i][1]) + " " + str(e[i][2]) + "\n"
     write_inputs(name, res1, res2)
 
-    return name
-
 def run_unique(n,m,t,party,address):
-    name = generate_unique(n,m,t)
+    name = 'unique-' + str(n) + '-' + str(m) + '-' + str(t)
+    generate_unique(name,n,m,t)
     run(name, party, address)
 
-def generate_bounded(n,m,w,t):
-    name = 'bounded-' + str(n) + '-' + str(m) + '-' + str(w) + '-' + str(t)
+def generate_bounded(name,n,m,w,t):
     seed(name)
 
     maxWeight = max(1, int(m * w))
@@ -75,39 +77,37 @@ def generate_bounded(n,m,w,t):
     for i in range(m1,m):
         res2 += str(e[i][0]) + " " + str(e[i][1]) + " " + str(e[i][2]) + "\n"
     write_inputs(name, res1, res2)
-    
-    return name
 
 def run_bounded(n,m,w,t,party,address):
-    name = generate_bounded(n,m,w,t)
+    name = 'bounded-' + str(n) + '-' + str(m) + '-' + str(w) + '-' + str(t)
+    generate_bounded(name,n,m,w,t)
     run(name, party, address)
 
 party = int(input())
 address = input()
 
-unique = [
-    (10, 30, 1),
-    (20, 60, 1),
-    (100, 300, 1),
-    (200, 600, 1),
-    (1000, 3000, 1),
-    (2000, 6000, 1),
-    (10000, 30000, 1),
-    (20000, 60000, 1),
-    (100000, 300000, 1),
-]
+N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
+M = [3,6]
+T = [1,2,3]
+W = [1.0,0.5,0.2,0.1,0.05,0.02,0.01]
+
+unique = []
+for n in N:
+    for m in M:
+        for t in T:
+            unique.append((n,m*n,t))
 
 bounded = []
 for (n,m,t) in unique:
-    for w in [1.0,0.5,0.2,0.1]:
+    for w in W:
         bounded.append((n,m,w,t))
 
-# for (n,m,t) in unique:
-#     if party == 1:
-#         time.sleep(5)
-#     run_unique(n,m,t,party,address)
+for (n,m,t) in unique:
+    #if party == 1:
+    #    time.sleep(5)
+    run_unique(n,m,t,party,address)
 
 for (n,m,w,t) in bounded:
-    if party == 1:
-        time.sleep(5)
+    #if party == 1:
+    #    time.sleep(5)
     run_bounded(n,m,w,t,party,address)

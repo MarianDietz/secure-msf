@@ -1732,7 +1732,7 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 	/**Allocating the memory for the BYTE pointer with the read ANDGate lenght size from the file.*/
 	ptr = (BYTE*)malloc(andbytelen*sizeof(BYTE));
 
-	std::cout << "seeking to file locations " << m_nFilePosA << " " << m_nFilePosB << " " << m_nFilePosC << "\n";
+	// std::cout << "seeking to file locations " << m_nFilePosA << " " << m_nFilePosB << " " << m_nFilePosC << "\n";
 
 	if(fseek(fp, m_nFilePosA, SEEK_SET))
 			std::cout << "Error occured in fseek" << std::endl;
@@ -1789,7 +1789,7 @@ BOOL BoolSharing::readFileMetadata(char *filename) {
 				std::cout << "Error occured in fread" << std::endl;
 	
 	m_remainingAndBytes = andbytelen_in_file;
-	std::cout << "found " << m_remainingAndBytes << " bytes in preprocessing file\n";
+	// std::cout << "found " << m_remainingAndBytes << " bytes in preprocessing file\n";
 
 	m_nFilePosA = ftell(fp);
 	m_nFilePosB = m_nFilePosA + andbytelen_in_file;

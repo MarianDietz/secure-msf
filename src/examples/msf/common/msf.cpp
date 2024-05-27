@@ -94,6 +94,7 @@ map<weight_t, set<int>> weightVertices; // maps weight to list of vertices
 set<weight_t> needReconnecting; // weights for which we need to run connectivity
 
 map<int, vector<vector<vector<vector<SubgraphEdge>>>>> subgraphs;
+vector<pair<int, int>> subgraphStats;
 
 uint64_t count_ands_bestweight = 0, count_ands_connectivity = 0, count_ands_subgraph;
 
@@ -341,7 +342,7 @@ void reconnect(ABYParty *party) {
 
 	map<int, vector<vector<share*>>> matrices;
 	for (auto &a : mp) {
-		cout << "building size " << a.first << "\n";
+		// cout << "building size " << a.first << "\n";
 		matrices[a.first] = CreateConnectivityCircuit(a.first, a.second, circ);
 	}
 	
@@ -385,7 +386,7 @@ void reconnect(ABYParty *party) {
 	needReconnecting.clear();
 	party->Reset();
 
-	while (!weightVertices.empty() && weightVertices.begin()->first <= secondMerged) {
+	while (firstMerged != -1 && !weightVertices.empty() && weightVertices.begin()->first <= secondMerged) {
 		int w = weightVertices.begin()->first;
 		set<int> s = weightVertices.begin()->second;
 		s.insert(firstMerged);
@@ -604,11 +605,12 @@ void findSubgraphMSFs(ABYParty *party, e_role role) {
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
 
-	cout << getTime() << ": Start building subgraph circuit\n";
+	//cout << getTime() << ": Start building subgraph circuit\n";
 
 	map<int, vector<share*>> outputs;
 	for (auto &a : subgraphs) {
-		cout << "building " << a.second.size() << " subgraphs of size " << a.first << "\n";
+		//cout << "building " << a.second.size() << " subgraphs of size " << a.first << "\n";
+		subgraphStats.push_back({a.first, a.second.size()});
 		outputs[a.first] = CreateSubgraphCircuit(a.first, a.second, circ);
 		//for (auto &e : a) cout << e.orig_u << "-" << e.orig_v << " ";
 		//cout << "\n";
@@ -683,14 +685,15 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 
 	MSFStartWatch("Total", MP_TOTAL);
 
+	cout << "round ";
 	int rounds = 1;
 	while (!needRecomputing.empty()) {
-		cout << "round " << rounds << ": weights...\n";
+		cout << rounds << " " << flush;
 		recomputeWeights(party);
-		cout << "round " << rounds << ": connectivity...\n";
 		if (!needReconnecting.empty()) reconnect(party);
 		rounds++;
 	}
+	cout << "\n";
 
 	ofstream stats;
 	stats.open(stats_path);
@@ -699,10 +702,10 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 	stats << "iterations " << rounds-1 << "\n";
 	stats << "phase1(total/aby/setup/network) " << mp_tTimes[MP_TOTAL].timing << " " << mp_tTimes[MP_ABY].timing << " " << mp_tTimes[MP_SETUP].timing << " " << mp_tTimes[MP_NETWORK].timing << "\n";
 	stats << "phase1(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
-	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
-	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
-	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
-	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
+	// cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
+	// cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
+	// cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
+	// cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
 	MSFResetTimers();
 
 	cout << "subgraphs...\n";
@@ -711,12 +714,16 @@ int32_t msf(e_role role, const std::string& address, uint16_t port, seclvl seclv
 	MSFStopWatch("Total", MP_TOTAL);
 	stats << "phase2(total/aby/setup/network) " << mp_tTimes[MP_TOTAL].timing << " " << mp_tTimes[MP_ABY].timing << " " << mp_tTimes[MP_SETUP].timing << " " << mp_tTimes[MP_NETWORK].timing << "\n";
 	stats << "phase2(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
-	cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
-	cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
-	cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
-	cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
+	// cout << "Total time: " << mp_tTimes[MP_TOTAL].timing << " ms" << "\n";
+	// cout << "ABY total time: " << mp_tTimes[MP_ABY].timing << " ms" << "\n";
+	// cout << "Setup time: " << mp_tTimes[MP_SETUP].timing << " ms" << "\n";
+	// cout << "Network time: " << mp_tTimes[MP_NETWORK].timing << " ms" << "\n";
 
 	stats << "ands(computew,connectivity,subgraph) " << count_ands_bestweight << " " << count_ands_connectivity << " " << count_ands_subgraph << "\n";
+
+	stats << "subgraphs";
+	for (auto a : subgraphStats) stats << " " << a.first << ":" << a.second;
+	stats << "\n";
 
 	stats.close();
 
