@@ -89,7 +89,7 @@ address = input()
 N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
 M = [3,6]
 T = [1,2,3]
-W = [1.0,0.5,0.2,0.1,0.05,0.02,0.01]
+W = [1.0,0.5,0.2,0.1,0.05,0.02]
 
 unique = []
 for n in N:
@@ -98,8 +98,8 @@ for n in N:
             unique.append((n,m*n,t))
 
 bounded = []
-for (n,m,t) in unique:
-    for w in W:
+for w in W:
+    for (n,m,t) in unique:
         bounded.append((n,m,w,t))
 
 for (n,m,t) in unique:

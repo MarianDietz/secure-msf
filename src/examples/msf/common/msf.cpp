@@ -32,7 +32,7 @@ typedef uint32_t edgecount_t;
 const size_t edgecount_bitlen = 32;
 const edgecount_t edgecount_dummy = -1;
 
-const size_t kappa = 32;
+const size_t kappa = 40;
 
 random_device dev;
 mt19937 rng(dev());
@@ -391,6 +391,7 @@ void reconnect(ABYParty *party) {
 		set<int> s = weightVertices.begin()->second;
 		s.insert(firstMerged);
 		vector<int> comp(s.begin(), s.end());
+		needRecomputing.erase(firstMerged);
 		firstMerged = merge(comp, w);
 	}
 }
