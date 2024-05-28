@@ -22,6 +22,17 @@ def run(name, party, address):
     with open('inputs/' + name + '/p' + str(party) + '.txt', 'r') as f:
         subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/' + name + '-p' + str(party) + '.txt'], stdin=f, text=True)
 
+def run_genmts(count, party, address):
+    if os.path.exists('stats/genmt-' + str(count) + '-p' + str(party) + '.txt'):
+        print('=== Skipping ' + str(count) + ' MTs ===')
+        return
+    if os.path.exists('pre_comp_client.dump'):
+        os.remove('pre_comp_client.dump')
+    if os.path.exists('pre_comp_server.dump'):
+        os.remove('pre_comp_server.dump')
+    print('=== Running ' + str(count) + ' MTs ===')
+    subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/genmt-' + str(count) + '-p' + str(party) + '.txt', '-t', 'genots', '-n', str(count)], text=True)
+
 def generate_unique(name,n,m,t):
     name = 'unique-' + str(n) + '-' + str(m) + '-' + str(t)
     seed(name)
@@ -86,28 +97,42 @@ def run_bounded(n,m,w,t,party,address):
 party = int(input())
 address = input()
 
-N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
-M = [3,6]
-T = [1,2,3]
-W = [1.0,0.5,0.2,0.1,0.05,0.02]
+op = 'mt'
 
-unique = []
-for n in N:
-    for m in M:
-        for t in T:
-            unique.append((n,m*n,t))
+if op == 'msf':
+    N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
+    M = [3,6]
+    T = [1,2,3]
+    W = [1.0,0.5,0.2,0.1,0.05,0.02]
 
-bounded = []
-for w in W:
+    unique = []
+    for n in N:
+        for m in M:
+            for t in T:
+                unique.append((n,m*n,t))
+
+    bounded = []
+    for w in W:
+        for (n,m,t) in unique:
+            bounded.append((n,m,w,t))
+
     for (n,m,t) in unique:
-        bounded.append((n,m,w,t))
+        #if party == 1:
+        #    time.sleep(5)
+        run_unique(n,m,t,party,address)
 
-for (n,m,t) in unique:
-    #if party == 1:
-    #    time.sleep(5)
-    run_unique(n,m,t,party,address)
-
-for (n,m,w,t) in bounded:
-    #if party == 1:
-    #    time.sleep(5)
-    run_bounded(n,m,w,t,party,address)
+    for (n,m,w,t) in bounded:
+        #if party == 1:
+        #    time.sleep(5)
+        run_bounded(n,m,w,t,party,address)
+elif op == 'mt':
+    N = []
+    for i in [10,100,1000,10000,100000,1000000,10000000,100000000,1000000000]:
+        for m in [1,2,5]:
+            if i*m > 4000000000:
+                continue
+            N.append(i*m)
+    for n in N:
+        if party == 1:
+            time.sleep(1)
+        run_genmts(n, party, address)

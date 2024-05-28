@@ -279,6 +279,8 @@ void ABYParty::ExecSetup(uint32_t num) {
 
 	m_vSharings[S_BOOL]->SetPreCompPhaseValue(ePreCompStore);
 
+	MSFStartRecording("ABY Total", MP_ABY, m_vSockets);
+
 	StartRecording("Starting setup phase: ", P_SETUP, m_vSockets);
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 		m_vSharings[i]->PrepareSetupPhase(m_pSetup.get());
@@ -312,6 +314,7 @@ void ABYParty::ExecSetup(uint32_t num) {
 
 	}
 	StopRecording("Time for setup phase: ", P_SETUP, m_vSockets);
+	MSFStopRecording("ABY total", MP_ABY, m_vSockets);
 
 	m_vSharings[S_BOOL]->SetPreCompPhaseValue(ePreCompDefault);
 	m_vANDs->numgates = 0;

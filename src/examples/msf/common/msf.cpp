@@ -737,7 +737,20 @@ int32_t genOTs(e_role role, const std::string& address, uint16_t port, seclvl se
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 
+	MSFResetTimers();
+	MSFStartWatch("Total", MP_TOTAL);
+
 	party->ExecSetup(num);
+
+	MSFStopWatch("Total", MP_TOTAL);
+
+	ofstream stats;
+	stats.open(stats_path);
+
+	stats << "ots(total) " << mp_tTimes[MP_TOTAL].timing << "\n";
+	stats << "ots(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
+
+	stats.close();
 
 	delete party;
 
