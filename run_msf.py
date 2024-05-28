@@ -133,6 +133,6 @@ elif op == 'mt':
                 continue
             N.append(i*m)
     for n in N:
-        if party == 1:
-            time.sleep(1)
+        #if party == 1:
+        #    time.sleep(1)
         run_genmts(n, party, address)
