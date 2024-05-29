@@ -34,11 +34,11 @@ def run_genmts(count, party, address):
     subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/genmt-' + str(count) + '-p' + str(party) + '.txt', '-t', 'genots', '-n', str(count)], text=True)
 
 def run_connectivity(size, number, party, address):
-    if os.path.exists('stats/connectivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt'):
+    if os.path.exists('stats/connctivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt'):
         print('=== Skipping ' + str(size) + ' x' + number + ' Connectivity ===')
         return
     print('=== Running ' + str(size) + ' x' + str(number) + ' Connectivity ===')
-    subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/connectivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt', '-t', 'connectivity', '-k', str(size), '-n', str(number)], text=True)
+    subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/connctivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt', '-t', 'connectivity', '-k', str(size), '-n', str(number)], text=True)
 
 def run_subgraph(size, number, party, address):
     if os.path.exists('stats/subgraph-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt'):
