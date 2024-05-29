@@ -778,6 +778,7 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	CreateConnectivityCircuit(size, data, circ);
 	
 	//cout << getTime() << ": Start running connectivity circuit\n";
+	count_ands_connectivity += circ->GetNumANDGates();
 	party->ExecCircuit();
 	//cout << getTime() << ": Finished running connectivity circuit\n";
 
@@ -831,6 +832,7 @@ int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, se
 	stats.open(stats_path);
 
 	stats << "subgraph(total) " << mp_tTimes[MP_TOTAL].timing << "\n";
+	count_ands_subgraph += circ->GetNumANDGates();
 	stats << "ands " << count_ands_subgraph << "\n";
 	stats << "subgraph(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
 
