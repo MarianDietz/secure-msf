@@ -35,7 +35,7 @@ def run_genmts(count, party, address):
 
 def run_connectivity(size, number, party, address):
     if os.path.exists('stats/connctivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt'):
-        print('=== Skipping ' + str(size) + ' x' + number + ' Connectivity ===')
+        print('=== Skipping ' + str(size) + ' x' + str(number) + ' Connectivity ===')
         return
     print('=== Running ' + str(size) + ' x' + str(number) + ' Connectivity ===')
     subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/connctivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt', '-t', 'connectivity', '-k', str(size), '-n', str(number)], text=True)
