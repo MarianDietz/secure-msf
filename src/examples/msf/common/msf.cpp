@@ -762,6 +762,9 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	party->ConnectAndBaseOTs();
 	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
 
+	MSFResetTimers();
+	MSFStartWatch("Total", MP_TOTAL);
+
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
 
@@ -778,6 +781,17 @@ int32_t test_connectivity(e_role role, const std::string& address, uint16_t port
 	party->ExecCircuit();
 	//cout << getTime() << ": Finished running connectivity circuit\n";
 
+	MSFStopWatch("Total", MP_TOTAL);
+
+	ofstream stats;
+	stats.open(stats_path);
+
+	stats << "connectivity(total) " << mp_tTimes[MP_TOTAL].timing << "\n";
+	stats << "ands " << count_ands_connectivity << "\n";
+	stats << "connectivity(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
+
+	stats.close();
+
 	delete party;
 
 	return 0;
@@ -787,6 +801,9 @@ int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, se
 	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads);
 	party->ConnectAndBaseOTs();
 	party->GetSharings()[S_BOOL]->SetPreCompPhaseValue(ePreCompRead);
+
+	MSFResetTimers();
+	MSFStartWatch("Total", MP_TOTAL);
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[S_BOOL]->GetCircuitBuildRoutine();
@@ -807,7 +824,17 @@ int32_t test_subgraph(e_role role, const std::string& address, uint16_t port, se
 	//cout << getTime() << ": Start running subgraph circuit\n";
 	party->ExecCircuit();
 	//cout << getTime() << ": Finished running subgraph circuit\n";
-	cout << sizeof(GATE) << "\n";
+
+	MSFStopWatch("Total", MP_TOTAL);
+
+	ofstream stats;
+	stats.open(stats_path);
+
+	stats << "subgraph(total) " << mp_tTimes[MP_TOTAL].timing << "\n";
+	stats << "ands " << count_ands_subgraph << "\n";
+	stats << "subgraph(recv/send)" << " " << mp_tRecv[MP_ABY].totalcomm << " " << mp_tSend[MP_ABY].totalcomm << "\n";
+
+	stats.close();
 
 	delete party;
 

@@ -33,6 +33,20 @@ def run_genmts(count, party, address):
     print('=== Running ' + str(count) + ' MTs ===')
     subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/genmt-' + str(count) + '-p' + str(party) + '.txt', '-t', 'genots', '-n', str(count)], text=True)
 
+def run_connectivity(size, number, party, address):
+    if os.path.exists('stats/connectivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt'):
+        print('=== Skipping ' + str(size) + ' x' + number + ' Connectivity ===')
+        return
+    print('=== Running ' + str(size) + ' x' + str(number) + ' Connectivity ===')
+    subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/connctivity-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt', '-t', 'connectivity', '-k', str(size), '-n', str(number)], text=True)
+
+def run_subgraph(size, number, party, address):
+    if os.path.exists('stats/subgraph-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt'):
+        print('=== Skipping ' + str(size) + ' x' + str(number) + ' Subgraph ===')
+        return
+    print('=== Running ' + str(size) + ' x' + str(number) + ' Subgraph ===')
+    subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/subgraph-' + str(size) + '-' + str(number) + '-p' + str(party) + '.txt', '-t', 'subgraph', '-k', str(size), '-n', str(number)], text=True)
+
 def generate_unique(name,n,m,t):
     name = 'unique-' + str(n) + '-' + str(m) + '-' + str(t)
     seed(name)
@@ -97,7 +111,7 @@ def run_bounded(n,m,w,t,party,address):
 party = int(input())
 address = input()
 
-op = 'mt'
+op = 'connectivity'
 
 if op == 'msf':
     N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
@@ -137,3 +151,11 @@ elif op == 'mt':
         #if party == 1:
         #    time.sleep(1)
         run_genmts(n, party, address)
+elif op == 'connectivity':
+    N = list(range(1,151))
+    for n in N:
+        run_connectivity(n, 1, party, address)
+elif op == 'subgraph':
+    N = list(range(1,76))
+    for n in N:
+        run_connectivity(n, 1, party, address)
