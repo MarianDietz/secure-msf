@@ -153,9 +153,11 @@ elif op == 'mt':
         run_genmts(n, party, address)
 elif op == 'connectivity':
     N = list(range(1,151))
-    for n in N:
-        run_connectivity(n, 1, party, address)
+    for count in [1,10,100,1000]:
+        for n in N:
+            run_connectivity(n, count, party, address)
 elif op == 'subgraph':
     N = list(range(1,76))
-    for n in N:
-        run_connectivity(n, 1, party, address)
+    for count in [1,10,100,1000]:
+        for n in N:
+            run_connectivity(n, count, party, address)
