@@ -146,7 +146,7 @@ if op == 'msf':
         N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
         M = [3,6]
         T = [1,2,3]
-        W = [1.0,0.5,0.2,0.1,0.05,0.02]
+        W = [1.0,0.5,0.2,0.1,0.05]
 
         unique = []
         for n in N:
@@ -207,7 +207,7 @@ elif op == 'connectivity':
             for n in N:
                 run_connectivity(n, count, party, address)
     else:
-        N = int(sys.argv[4])
+        n = int(sys.argv[4])
         count = int(sys.argv[5])
         run_connectivity(n, count, party, address)
 elif op == 'subgraph':
@@ -218,11 +218,18 @@ elif op == 'subgraph':
         print("                  This will run tests for a variety of N's and M's")
         sys.exit(0)
     if sys.argv[4] == 'all':
-        N = list(range(1,76))
         for count in [1,10,100,1000]:
-            for n in N:
+            if count <= 10:
+                maxN = 60
+            elif count == 10:
+                maxN = 48
+            else:
+                maxN = 22
+            for n in range(1,maxN+1):
                 run_subgraph(n, count, party, address)
     else:
-        N = int(sys.argv[4])
+        n = int(sys.argv[4])
         count = int(sys.argv[5])
         run_subgraph(n, count, party, address)
+else:
+    print('Unknown operation.')
