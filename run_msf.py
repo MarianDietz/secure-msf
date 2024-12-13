@@ -1,18 +1,26 @@
 import os
-import math
-import time
+import sys
 from random import *
 import subprocess
 
 def write_inputs(name, s1, s2):
     if not os.path.exists('inputs/' + name):
-        os.mkdir('inputs/' + name)
-    f1 = open('inputs/' + name + '/p0.txt', 'w')
-    f1.write(s1)
-    f1.close()
-    f2 = open('inputs/' + name + '/p1.txt', 'w')
-    f2.write(s2)
-    f2.close()
+        try:
+            os.mkdir('inputs/' + name)
+        except FileExistsError:
+            pass
+    try:
+        f1 = open('inputs/' + name + '/p0.txt', 'w')
+        f1.write(s1)
+        f1.close()
+    except FileExistsError:
+        pass
+    try:
+        f2 = open('inputs/' + name + '/p1.txt', 'w')
+        f2.write(s2)
+        f2.close()
+    except FileExistsError:
+        pass
 
 def run(name, party, address):
     if os.path.exists('stats/' + name + '-p' + str(party) + '.txt'):
@@ -27,9 +35,15 @@ def run_genmts(count, party, address):
         print('=== Skipping ' + str(count) + ' MTs ===')
         return
     if os.path.exists('pre_comp_client.dump'):
-        os.remove('pre_comp_client.dump')
+        try:
+            os.remove('pre_comp_client.dump')
+        except FileNotFoundError:
+            pass
     if os.path.exists('pre_comp_server.dump'):
-        os.remove('pre_comp_server.dump')
+        try:
+            os.remove('pre_comp_server.dump')
+        except FileNotFoundError:
+            pass
     print('=== Running ' + str(count) + ' MTs ===')
     subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/genmt-' + str(count) + '-p' + str(party) + '.txt', '-t', 'genots', '-n', str(count)], text=True)
 
@@ -108,56 +122,107 @@ def run_bounded(n,m,w,t,party,address):
     generate_bounded(name,n,m,w,t)
     run(name, party, address)
 
-party = int(input())
-address = input()
+if len(sys.argv) < 4:
+    print('Usage: python3 run_msf.py [Party, i.e., 0 or 1] [Address: i.e., 127.0.0.1 or the ip address of the other party] [Operation: msf/mt/connectivity/subgraph]')
+    sys.exit(0)
 
-op = 'connectivity'
+party = int(sys.argv[1])
+address = sys.argv[2]
+op = sys.argv[3]
+
+if not os.path.exists('inputs'):
+    os.mkdir('inputs')
+if not os.path.exists('stats'):
+    os.mkdir('stats')
 
 if op == 'msf':
-    N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
-    M = [3,6]
-    T = [1,2,3]
-    W = [1.0,0.5,0.2,0.1,0.05,0.02]
+    if len(sys.argv) < 5:
+        print('Usage:       python3 run_msf.py [Party] [Address] msf [N] [M] [W: float or "unique"] [T]')
+        print('                  This will run the MSF protocol for N vertices, M random edges with edge weights that are either unique or chosen randomly between 1 and W*M, and T is a seed')
+        print('Alternative: python3 run_msf.py [Party] [Address] msf all')
+        print("                  This will run tests for a variety of N's, M's, W's, and T's")
+        sys.exit(0)
+    if sys.argv[4] == 'all':
+        N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
+        M = [3,6]
+        T = [1,2,3]
+        W = [1.0,0.5,0.2,0.1,0.05,0.02]
 
-    unique = []
-    for n in N:
-        for m in M:
-            for t in T:
-                unique.append((n,m*n,t))
+        unique = []
+        for n in N:
+            for m in M:
+                for t in T:
+                    unique.append((n,m*n,t))
 
-    bounded = []
-    for w in W:
+        bounded = []
+        for w in W:
+            for (n,m,t) in unique:
+                bounded.append((n,m,w,t))
+
         for (n,m,t) in unique:
-            bounded.append((n,m,w,t))
+            #if party == 1:
+            #    time.sleep(5)
+            run_unique(n,m,t,party,address)
 
-    for (n,m,t) in unique:
-        #if party == 1:
-        #    time.sleep(5)
-        run_unique(n,m,t,party,address)
-
-    for (n,m,w,t) in bounded:
-        #if party == 1:
-        #    time.sleep(5)
-        run_bounded(n,m,w,t,party,address)
+        for (n,m,w,t) in bounded:
+            #if party == 1:
+            #    time.sleep(5)
+            run_bounded(n,m,w,t,party,address)
+    else:
+        n = int(sys.argv[4])
+        m = int(sys.argv[5])
+        t = int(sys.argv[7])
+        if sys.argv[6] == 'unique':
+            run_unique(n,m,t,party,address)
+        else:
+            run_bounded(n,m,float(sys.argv[6]),t,party,address)
 elif op == 'mt':
-    N = []
-    for i in [10,100,1000,10000,100000,1000000,10000000,100000000,1000000000]:
-        for m in [1,2,5]:
-            if i*m > 4000000000:
-                continue
-            N.append(i*m)
-    N.append(4000000000)
-    for n in N:
-        #if party == 1:
-        #    time.sleep(1)
-        run_genmts(n, party, address)
+    if len(sys.argv) < 5:
+        print('Usage: python3 run_msf.py [Party] [Address] mt [Count: any integer, or "all" in order to repeat this for a predefined list of numbers]')
+        sys.exit(0)
+    if sys.argv[4] == 'all':
+        N = []
+        for i in [10,100,1000,10000,100000,1000000,10000000,100000000,1000000000]:
+            for m in [1,2,5]:
+                if i*m > 4000000000:
+                    continue
+                N.append(i*m)
+        N.append(4000000000)
+        for n in N:
+            #if party == 1:
+            #    time.sleep(1)
+            run_genmts(n, party, address)
+    else:
+        run_genmts(int(sys.argv[4]), party, address)
 elif op == 'connectivity':
-    N = list(range(1,151))
-    for count in [1,10,100,1000]:
-        for n in N:
-            run_connectivity(n, count, party, address)
+    if len(sys.argv) < 5:
+        print('Usage:       python3 run_msf.py [Party] [Address] connectivity N M')
+        print('                  This will run the Connectivity sub-protocol with input size N, on M instances at the same time.')
+        print('Alternative: python3 run_msf.py [Party] [Address] connectivity all')
+        print("                  This will run tests for a variety of N's and M's")
+        sys.exit(0)
+    if sys.argv[4] == 'all':
+        N = list(range(1,151))
+        for count in [1,10,100,1000]:
+            for n in N:
+                run_connectivity(n, count, party, address)
+    else:
+        N = int(sys.argv[4])
+        count = int(sys.argv[5])
+        run_connectivity(n, count, party, address)
 elif op == 'subgraph':
-    N = list(range(1,76))
-    for count in [1,10,100,1000]:
-        for n in N:
-            run_connectivity(n, count, party, address)
+    if len(sys.argv) < 5:
+        print('Usage:       python3 run_msf.py [Party] [Address] subgraph N M')
+        print('                  This will run the IsolatedMSF sub-protocol with input size N, on M instances at the same time.')
+        print('Alternative: python3 run_msf.py [Party] [Address] subgraph all')
+        print("                  This will run tests for a variety of N's and M's")
+        sys.exit(0)
+    if sys.argv[4] == 'all':
+        N = list(range(1,76))
+        for count in [1,10,100,1000]:
+            for n in N:
+                run_subgraph(n, count, party, address)
+    else:
+        N = int(sys.argv[4])
+        count = int(sys.argv[5])
+        run_subgraph(n, count, party, address)

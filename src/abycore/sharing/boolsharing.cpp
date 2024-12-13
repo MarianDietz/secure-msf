@@ -1766,7 +1766,7 @@ BOOL BoolSharing::readFileMetadata(char *filename) {
 	/**Check if the file already exists and if the existing is empty. If so, return false.*/
 	if(!filesystem::exists(filename)||filesystem::is_empty(filename)) {
 		/**Returning false and reverting the precomputation mode to default.*/
-		std::cout << "file doesn't exist\n";
+		SetPreCompPhaseValue(ePreCompDefault);
 		return FALSE;
 	}
 
