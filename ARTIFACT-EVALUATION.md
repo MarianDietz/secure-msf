@@ -26,18 +26,15 @@ Only very small amounts of disk space (a couple of gigabytes) is required.
 Only tested on Linux. The requirements are the same as for the ABY framework (see [here](README_ABY.md#requirements), they can all be installed via `apt-get` on Ubuntu).
 In addition, an installation of Python 3 (at least 3.10) is required, with the matplotlib package (which can be installed e.g. `sudo apt-get install python3-matplotlib`).
 
+One of the two machines will need to be acceessible through port `7788` by the other machine. See below for more information.
+
 ### Estimated Time and Storage Consumption
 See the experiment section for individual numbers. In total, expect less than 5 hours for the LAN setting, but mutliply this by ~10 if testing the WAN setting.
 
 ## Environment
-Use Tag [v0.1](https://github.com/MarianDietz/secure-msf/releases/tag/v0.1) for a consistent state of this repository to use for artifact evaluation.
 
 ### Accessibility
-Describe how to access your artifact via persistent sources.
-Valid hosting options are institutional and third-party digital repositories.
-Do not use personal web pages.
-For repositories that evolve over time (e.g., Git Repositories ), specify a specific commit-id or tag to be evaluated.
-In case your repository changes during the evaluation to address the reviewer's feedback, please provide an updated link (or commit-id / tag) in a comment.
+Use Tag [v0.1](https://github.com/MarianDietz/secure-msf/releases/tag/v0.1) for a consistent state of this repository to use for artifact evaluation.
 
 ### Set up the environment
 First, on all machines, build ABY (including our new MSF functionality) after cloning the repository as follows:
@@ -47,7 +44,7 @@ cmake .. -DABY_BUILD_EXE=On
 make
 ```
 
-Second, generate all input files by running the following on both installations (or just once if using the same installation to run both parties):
+Second, generate all input files by running the following on both machines (or just once if using the same installation to run both parties):
 
 ```bash
 python3 gen_inputs.py 
@@ -115,7 +112,8 @@ on the server, and then
 python3 run_msf.py 1 [server's ip] mt 4000000000
 ```
 on the client.
-This is going to take several minutes in the LAN setting. In the WAN setting, it may take up to an hour. However, if all you want to do is to run the remaining experiments in the WAN setting, then you can also just run the above in the LAN setting, and then copy the two created files `pre_comp_client.dump` and `pre_comp_server.dump` to the two WAN machines.
+
+**This experiment should take less than 2 hours in a LAN setting.** In the WAN setting, it may take up to an hour. However, if all you want to do is to run the remaining experiments in the WAN setting, then you can also just run the above in the LAN setting, and then copy the two created files `pre_comp_client.dump` and `pre_comp_server.dump` to the two WAN machines.
 
 However, in order to benchmark the generation of MT's for varying numbers, you can run the above commands with `all` instead of `4000000000`.
 Doing so later allows creating a plot as in Figure 3 of our paper, which shows the amount of time taken in dependency of the number of MT's to be generated.
@@ -146,7 +144,7 @@ and on the client, execute
 ```bash
 python3 run_msf.py 1 [server's ip] msf all
 ```
-You will be able to see progress in the command-line. In case it seems that there was an error and nothing is happening anymore, just abort and re-run the same commands. Experiments that were already completed will be skipped in the future.
+**This experiment should take less than 2 hours in a LAN setting.** You will be able to see progress in the command-line. In case it seems that there was an error and nothing is happening anymore (which may for example happen if there is a network error), just abort and re-run the same commands. Experiments that were already completed will be skipped in the future.
 
 For each experiment, in the `stats` folder, the server will create a file `unique-N-(M/N)-T-p0.txt` or `bounded-N-(M/N)-W-T-p0.txt`, e.g.:
 ```
@@ -178,6 +176,8 @@ And the following on the client:
 ```bash
 python3 run_msf.py 1 [server's ip] msf tsp
 ```
+**This experiment should take less than 10 minutes in a LAN setting.**
+
 This will create files `berlin52-1-p0.txt`, `brg180-1-p0.txt`, `gr666-1-p0.txt`, `nrw1379-1-p0.txt`, `pcb1173-1-p0.txt` in the `stats` folder.
 These stats files have the same format as those generated for random graphs above.
 
@@ -198,6 +198,7 @@ and on the client, execute
 ```bash
 python3 run_msf.py 1 [server's ip] connectivity all
 ```
+**This experiment should take less than 30 minutes in a LAN setting.**
 
 For each experiment, in the `stats` folder, the server will create a file `connectivity-N-M-p0.txt`, e.g.:
 ```
@@ -224,6 +225,7 @@ and on the client, execute
 ```bash
 python3 run_msf.py 1 [server's ip] subgraph all
 ```
+**This experiment should take less than 2 hours in a LAN setting.**
 
 For each experiment, in the `stats` folder, the server will create a file `subgraph-N-M-p0.txt`, e.g.:
 ```
