@@ -1,5 +1,3 @@
-# Private Shared Random Minimum Spanning Forests
-
 # Artifact Appendix
 
 Paper title: **Private Shared Random Minimum Spanning Forests**
@@ -32,7 +30,7 @@ In addition, an installation of Python 3 (at least 3.10) is required, with the m
 See the experiment section for individual numbers. In total, expect less than 5 hours for the LAN setting, but mutliply this by ~10 if testing the WAN setting.
 
 ## Environment
-Use Tag v0.1 for a consistent state of this repository to use for artifact evaluation.
+Use Tag [v0.1](https://github.com/MarianDietz/secure-msf/releases/tag/v0.1) for a consistent state of this repository to use for artifact evaluation.
 
 ### Accessibility
 Describe how to access your artifact via persistent sources.

@@ -1,3 +1,9 @@
+# Private Shared Random Minimum Spanning Forests
+
+This repository contains the entire source code for our protocol presented in the paper *Private Shared Random Minimum Spanning Forests*, to appear at PETs 2025.
+
+See [here](ARTIFACT-EVALUATION.md) for instructions on how to use. The protocol is based on a fork of the ABY framework, whose README is found below. Hence, the installation instructions below also hold for our MSF protocol (as long as the option `-DABY_BUILD_EXE=On` is added to cmake).
+
 # [ABY](http://encrypto.de/papers/DSZ15.pdf) [![Build Status](https://travis-ci.org/encryptogroup/ABY.svg?branch=public)](https://travis-ci.org/encryptogroup/ABY)
 
 
