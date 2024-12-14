@@ -1,0 +1,3 @@
+subgraph(total) 141040
+ands 100706560
+subgraph(recv/send) 25252493 25252485

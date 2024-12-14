@@ -149,6 +149,8 @@ if op == 'msf':
         print('                  This will run the MSF protocol for N vertices, M random edges with edge weights that are either unique or chosen randomly between 1 and W*M, and T is a seed')
         print('Alternative: python3 run_msf.py [Party] [Address] msf all')
         print("                  This will run tests for a variety of N's, M's, W's, and T's")
+        print('Alternative: python3 run_msf.py [Party] [Address] msf tsp')
+        print("                  This will run tests for a variety of TSP graphs")
         sys.exit(0)
     if sys.argv[4] == 'all':
         N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]

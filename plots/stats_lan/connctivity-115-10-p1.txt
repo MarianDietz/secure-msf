@@ -1,0 +1,3 @@
+connectivity(total) 3302.04
+ands 15342160
+connectivity(recv/send) 3853825 3862462

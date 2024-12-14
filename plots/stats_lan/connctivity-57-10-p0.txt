@@ -1,0 +1,3 @@
+connectivity(total) 435.201
+ands 1885000
+connectivity(recv/send) 479913 479913

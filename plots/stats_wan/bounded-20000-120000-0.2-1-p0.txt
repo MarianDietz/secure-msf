@@ -1,0 +1,7 @@
+iterations 54
+phase1(total/aby/setup/network) 73027.9 72375.6 19.562 69116.8
+phase1(recv/send) 1889231 1906803
+phase2(total/aby/setup/network) 109347 35537.9 109.869 34424.2
+phase2(recv/send) 40279326 40279321
+ands(computew,connectivity,subgraph) 3973277 2286297 160254546
+subgraphs 2:14888 3:989 4:485 5:233 6:82 7:32 8:16 9:4

@@ -515,7 +515,7 @@ def plot_subgraph_time(network):
     for simd in [1,100,1000]:
         x = []
         for i in range(5,61,1):
-            if os.path.isfile('stats_sub_' + network + '_' + str(party) + '/subgraph-' + str(i) + '-' + str(simd) + '-p' + str(party) + '.txt'):
+            if os.path.isfile('stats_' + network + '/subgraph-' + str(i) + '-' + str(simd) + '-p' + str(party) + '.txt'):
                 x.append(i)
         y = []
         for n in x:
@@ -539,7 +539,7 @@ def plot_subgraph_mults(network = 'lan'):
     for simd in [1]:
         x = []
         for i in range(5,61,1):
-            if os.path.isfile('stats_sub_' + network + '_' + str(party) + '/subgraph-' + str(i) + '-' + str(simd) + '-p' + str(party) + '.txt'):
+            if os.path.isfile('stats_' + network + '/subgraph-' + str(i) + '-' + str(simd) + '-p' + str(party) + '.txt'):
                 x.append(i)
         y = []
         for n in x:
@@ -606,11 +606,11 @@ except FileNotFoundError as e:
 try:
     plot_mults_multi('lan', ['unique',0.5,0.2,0.1,0.05], 3)
 except FileNotFoundError as e:
-    print('Could not plot LAN mt\'s, because the file ' + e.filename + ' is missing.')
+    print('Could not plot LAN number of multiplications, because the file ' + e.filename + ' is missing.')
 try:
     plot_mults_multi('wan', ['unique',0.5,0.2,0.1,0.05], 3)
 except FileNotFoundError as e:
-    print('Could not plot LAN mt\'s, because the file ' + e.filename + ' is missing.')
+    print('Could not plot WAN number of multiplications, because the file ' + e.filename + ' is missing.')
 try:
     plot_comm_multi(['unique',0.5,0.2,0.1,0.05], 3)
 except FileNotFoundError as e:
