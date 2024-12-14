@@ -30,6 +30,14 @@ def run(name, party, address):
     with open('inputs/' + name + '/p' + str(party) + '.txt', 'r') as f:
         subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/' + name + '-p' + str(party) + '.txt'], stdin=f, text=True)
 
+def run_tsp(name, party, address):
+    if os.path.exists('stats/' + name + '-1-p' + str(party) + '.txt'):
+        print('=== Skipping ' + name + ' ===')
+        return
+    print('=== Running ' + name + ' ===')
+    with open('inputs/tsp/' + name + '/p' + str(party) + '.txt', 'r') as f:
+        subprocess.run(['./build/bin/msf', '-r', str(party), '-a', address, '-c', '8', '-f', 'stats/' + name + '-1-p' + str(party) + '.txt'], stdin=f, text=True)
+
 def run_genmts(count, party, address):
     if os.path.exists('stats/genmt-' + str(count) + '-p' + str(party) + '.txt'):
         print('=== Skipping ' + str(count) + ' MTs ===')
@@ -168,6 +176,9 @@ if op == 'msf':
             #if party == 1:
             #    time.sleep(5)
             run_bounded(n,m,w,t,party,address)
+    elif sys.argv[4] == 'tsp':
+        for s in ['berlin52', 'brg180', 'gr666', 'nrw1379', 'pcb1173']:
+            run_tsp(s,party,address)
     else:
         n = int(sys.argv[4])
         m = int(sys.argv[5])

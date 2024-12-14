@@ -1,7 +1,5 @@
 import os
-import sys
 from random import *
-import subprocess
 
 def write_inputs(name, s1, s2):
     if not os.path.exists('inputs/' + name):
@@ -71,7 +69,7 @@ if not os.path.exists('inputs'):
 N = [10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000]
 M = [3,6]
 T = [1,2,3]
-W = [1.0,0.5,0.2,0.1,0.05,0.02]
+W = [1.0,0.5,0.2,0.1,0.05]
 
 unique = []
 for n in N:

@@ -31,5 +31,6 @@ CTestTestfile.cmake
 .vscode/
 
 # MSF files
-inputs/
+inputs/*
+!inputs/tsp
 stats/
