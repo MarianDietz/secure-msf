@@ -130,6 +130,7 @@ ots(recv/send) 16000190953 16000190953
 The first lines denotes the number of millseconds taken by that experiment, and the second line contains the number of bytes received/sent during the run.
 
 **These experiments allow reproducing Figure 3 in our paper.** For example, in the LAN setting:
+
 ![OT LAN](plots/results/time-ot-lan.png)
 
 #### Experiment 1: MSF protocol
@@ -165,6 +166,7 @@ In total, the number of consumed MT's was 39823641 when securely comparing edge 
 The latter was executed with 2 nodes in the input for 181285 times, with 3 nodes for 7483 times, with 4 nodes for 943 times, and so on.
 
 **These experiments allow reproducing Figures 4, 5, and 7 in our paper.** For example, in the LAN setting, the amount of time spent for varying parameters `W` looks as follows:
+
 ![MSF LAN time](plots/results/time-multi-3-lan.png)
 
 ##### TSP Graphs
@@ -182,6 +184,7 @@ This will create files `berlin52-1-p0.txt`, `brg180-1-p0.txt`, `gr666-1-p0.txt`,
 These stats files have the same format as those generated for random graphs above.
 
 **These experiments allow reproducing Figure 6 in our paper.** For example, in the LAN setting, the required amount of time (and compared with estimations of Laud's protocol) are as follows:
+
 ![MSF LAN time](plots/results/time-tsp.png)
 
 #### Experiment 2: Connectivity sub-protocol
@@ -207,6 +210,7 @@ connectivity(recv/send) 2862264 2862264
 The first line shows the total running time in milliseconds, the second line the number of used MT's, and the third line the amount of bytes communicated.
 
 **These experiments allow reproducing Figure 8 and 10 (left) in our paper.** For example, in the LAN setting, the required amount of time for varying input sizes are as follows:
+
 ![Connectivity LAN time](plots/results/time-connectivity-lan.png)
 
 #### Experiment 3: IsolatedMSF sub-protocol
@@ -232,6 +236,7 @@ subgraph(recv/send) 5679994 5682959
 The first line shows the total running time in milliseconds, the second line the number of used MT's, and the third line the amount of bytes communicated.
 
 **These experiments allow reproducing Figure 9 and 10 (right) in our paper.** For example, in the LAN setting, the required amount of time for varying input sizes are as follows:
+
 ![IsolatedMSFF LAN time](plots/results/time-subgraph-lan.png)
 
 ### Plotting the results
